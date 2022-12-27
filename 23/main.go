@@ -22,21 +22,47 @@ type board struct {
 	proposedCoords map[coord]int
 }
 
+var CoordNorthWest = coord{x: -1, y: -1}
+var CoordNorth = coord{x: 0, y: -1}
+var CoordNorthEast = coord{x: 1, y: -1}
+var CoordEast = coord{x: 1, y: 0}
+var CoordSouthEast = coord{x: 1, y: 1}
+var CoordSouth = coord{x: 0, y: 1}
+var CoordSouthWest = coord{x: -1, y: 1}
+var CoordWest = coord{x: -1, y: 0}
+var CoordNeibohrs = []coord{CoordNorthWest, CoordNorth, CoordNorthEast, CoordEast, CoordSouthEast, CoordSouth, CoordSouthWest, CoordWest}
+
+// first 3: conditions, 4th: target
+var OrderChecks = [][]coord{
+	// north
+	[]coord{
+		CoordNorthWest, CoordNorth, CoordNorthEast, CoordNorth,
+	},
+	// south
+	[]coord{
+		CoordSouthWest, CoordSouth, CoordSouthEast, CoordSouth,
+	},
+	// west
+	[]coord{
+		CoordSouthWest, CoordWest, CoordNorthWest, CoordWest,
+	},
+	// east
+	[]coord{
+		CoordNorthEast, CoordEast, CoordSouthEast, CoordEast,
+	},
+}
+
 func (c1 coord) add(c2 coord) coord {
 	return coord{x: c1.x + c2.x, y: c1.y + c2.y}
 }
 
 func (elve *elve) proposeMove(board board, turn int) {
 	hasNeighbors := false
-	for y := -1; y < 2 && !hasNeighbors; y++ {
-		for x := -1; x < 2 && !hasNeighbors; x++ {
-			if x == 0 && y == 0 {
-				continue
-			}
 
-			if board.isOccupied(elve.coord.add(coord{x: x, y: y})) {
-				hasNeighbors = true
-			}
+	for i := 0; i < 8; i++ {
+		if board.isOccupied(elve.coord.add(CoordNeibohrs[i])) {
+			hasNeighbors = true
+			break
 		}
 	}
 
@@ -44,28 +70,8 @@ func (elve *elve) proposeMove(board board, turn int) {
 		return
 	}
 
-	// first 3: conditions, 4th: target
-	order := [][]coord{
-		// north
-		[]coord{
-			{-1, -1}, {0, -1}, {1, -1}, {0, -1},
-		},
-		// south
-		[]coord{
-			{-1, 1}, {0, 1}, {1, 1}, {0, 1},
-		},
-		// west
-		[]coord{
-			{-1, -1}, {-1, 0}, {-1, 1}, {-1, 0},
-		},
-		// east
-		[]coord{
-			{1, -1}, {1, 0}, {1, 1}, {1, 0},
-		},
-	}
-
 	for i := turn; i < turn+4; i++ {
-		direction := order[i%4]
+		direction := OrderChecks[i%4]
 		if !board.isOccupied(elve.coord.add(direction[0])) &&
 			!board.isOccupied(elve.coord.add(direction[1])) &&
 			!board.isOccupied(elve.coord.add(direction[2])) {
